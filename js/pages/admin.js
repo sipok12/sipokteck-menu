@@ -131,7 +131,11 @@ async function init() {
     if (profile?.platform_role !== 'platform_admin') { $('status').textContent = 'Accès refusé : rôle administrateur requis.'; return; }
     $('status').remove();
     const root = $('adminApp');
-    root.innerHTML = `<div class="tabs" role="tablist">${TABS.map(([k, l]) => `<button type="button" role="tab" data-tab="${k}" aria-selected="${k === state.tab}">${l}</button>`).join('')}</div><div id="panel"></div>`;
+    // Pastille « paiements à valider » : l'administrateur voit d'un coup d'œil ce qui l'attend.
+    const pending = await api.overview().then(o => Number(o.pending_payments) || 0).catch(() => 0);
+    if (pending > 0) state.tab = 'payments';
+    const label = (k, l) => (k === 'payments' && pending > 0 ? `${l}<span class="dot">${pending}</span>` : l);
+    root.innerHTML = `<div class="tabs" role="tablist">${TABS.map(([k, l]) => `<button type="button" role="tab" data-tab="${k}" aria-selected="${k === state.tab}">${label(k, l)}</button>`).join('')}</div><div id="panel"></div>`;
     root.classList.remove('hidden');
     root.addEventListener('click', onClick); root.addEventListener('change', onChange); root.addEventListener('input', onInput);
     view(state.tab);
