@@ -39,3 +39,7 @@ La console admin est volontairement en français uniquement.
 ## Build (v2.1)
 Vite multi-pages : chaque `*.html` racine est un point d'entrée ; `public/config.js` est servi tel quel (chargé avant les modules). Chart.js est chargé à la demande (`import('chart.js/auto')`, chunk séparé).
 Les tests unitaires injectent un faux client Supabase via `globalThis.__SIPOKMENU_CLIENT_FACTORY__` (voir `js/core/supabase.js`).
+
+## Design (v2.2)
+Identité : ardoise de maquis (vert encre `#10241c`, palme `#0b6e4f`, soleil `#f2b01e` pour les étiquettes de prix), titres Bricolage Grotesque, texte Figtree — polices auto-hébergées via `@fontsource-variable` (aucune requête externe, CSP `font-src 'self'`).
+Tokens dans `:root` de `css/styles.css` (les anciens noms `--blue`, `--navy`… sont conservés comme alias). Menu public : liste de plats avec prix en étiquette, pas de grille de cartes. Tableau de bord : bandeau de chiffres continu, onglets soulignés.

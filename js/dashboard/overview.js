@@ -62,8 +62,8 @@ export async function mountOverview(ctx, el, orders) {
         const css = getComputedStyle(document.documentElement);
         chart = new Chart(box.querySelector('#statsChart'), {
           data: { labels: s.daily.map(d => d.day.slice(5)), datasets: [
-            { type: 'bar', label: t('ov.revenue'), data: s.daily.map(d => d.revenue), backgroundColor: '#b9d4fa', yAxisID: 'y' },
-            { type: 'line', label: t('ov.orders'), data: s.daily.map(d => d.orders), borderColor: css.getPropertyValue('--blue').trim() || '#1265d8', tension: .3, yAxisID: 'y1' }] },
+            { type: 'bar', label: t('ov.revenue'), data: s.daily.map(d => d.revenue), backgroundColor: '#bfdccd', yAxisID: 'y' },
+            { type: 'line', label: t('ov.orders'), data: s.daily.map(d => d.orders), borderColor: css.getPropertyValue('--blue').trim() || '#0b6e4f', tension: .3, yAxisID: 'y1' }] },
           options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
             scales: { y: { beginAtZero: true, title: { display: true, text: 'FCFA' } }, y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, ticks: { precision: 0 } } } }
         });

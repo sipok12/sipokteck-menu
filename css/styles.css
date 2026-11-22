@@ -1,2 +1,72 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&family=Manrope:wght@600;700;800&display=swap');
-*{box-sizing:border-box}body{margin:0;color:#10243b;font-family:'DM Sans',sans-serif}a{color:inherit;text-decoration:none}.site-header{height:76px;display:flex;align-items:center;justify-content:space-between;padding:0 8%;border-bottom:1px solid #e4ebf3}.logo{font:800 23px Manrope;color:#071b32}.logo span,h1 span{color:#1265d8}nav{display:flex;gap:25px;align-items:center}.btn{background:#1265d8;color:white;border:0;border-radius:9px;padding:13px 20px;font-weight:700;cursor:pointer}.hero{padding:85px 9%;display:grid;grid-template-columns:1fr 1fr;gap:8%;align-items:center;background:linear-gradient(120deg,#f5f9ff,#fff)}.eyebrow{color:#1265d8;font-weight:700;letter-spacing:1.5px;font-size:11px}.hero h1{font:800 clamp(48px,6vw,74px)/1.05 Manrope;color:#071b32;letter-spacing:-3px;margin:18px 0}.hero p{font-size:18px;line-height:1.7;color:#62748a;max-width:530px}.demo{background:white;padding:28px;border:1px solid #e4ebf3;border-radius:20px;box-shadow:0 20px 60px #173c631c}.demo p{padding:12px 0;border-bottom:1px solid #e4ebf3;font-size:15px}.demo p b{float:right;color:#071b32}.tag{color:#1265d8;font-size:11px;font-weight:bold}.features{display:flex;justify-content:space-around;background:#071b32;color:white;padding:32px;gap:20px}.features p{color:#b9c8d8;font-size:13px}.content{padding:70px 9%;max-width:1200px;margin:auto}.content h2{font:800 34px Manrope}.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.plans article{border:1px solid #e4ebf3;border-radius:16px;padding:24px}.plans strong{font-size:24px;color:#1265d8}.plans small,.muted{color:#718096}footer{text-align:center;padding:30px;background:#071b32;color:white}.modal{position:fixed;inset:0;background:#06162acc;display:grid;place-items:center;padding:20px}.hidden{display:none!important}.modal-card{position:relative;background:white;padding:30px;border-radius:16px;width:min(420px,100%)}.modal-card form{display:grid;gap:12px}.modal-card input{padding:13px;border:1px solid #d6dfeb;border-radius:8px}.close{position:absolute;right:16px;top:12px;border:0;background:none;font-size:26px}.link-btn{border:0;background:none;color:#1265d8;cursor:pointer}.notice{color:#b42336}@media(max-width:720px){.site-header{padding:0 5%}nav{gap:10px}.hero{grid-template-columns:1fr;padding:55px 6%}.features{flex-direction:column}.plans{grid-template-columns:1fr}.content{padding:50px 6%}}
+/* SipokMenu — base, en-tête, page d'accueil, modales.
+   Polices auto-hébergées (npm) : Bricolage Grotesque (titres, prix) + Figtree (texte). */
+@import '@fontsource-variable/bricolage-grotesque';
+@import '@fontsource-variable/figtree';
+
+:root{
+  --encre:#10241c; --palme:#0b6e4f; --palme-fonce:#085640; --palme-pale:#e3f1ea;
+  --soleil:#f2b01e; --soleil-pale:#fff3d1; --papier:#f5f6f1; --blanc:#fff;
+  --ligne:#dde3da; --muted:#5b6b62; --piment:#c8372d; --warn:#a16207;
+  --blue:#0b6e4f; --navy:#10241c; --ink:#10241c; --bg:#f5f6f1; --line:#dde3da; --ok:#0b6e4f; --bad:#c8372d;
+  --titre:'Bricolage Grotesque Variable','Bricolage Grotesque',system-ui,sans-serif;
+  --texte:'Figtree Variable','Figtree',system-ui,sans-serif;
+  --rayon:10px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--papier);color:var(--encre);font-family:var(--texte);font-size:16px;line-height:1.5}
+a{color:inherit;text-decoration:none}
+h1,h2,h3{font-family:var(--titre);font-weight:700;line-height:1.1;letter-spacing:-.02em}
+.hidden{display:none!important}
+.muted,.plans small{color:var(--muted)}
+
+/* en-tête */
+.site-header{min-height:68px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 max(5%,calc((100% - 1160px)/2));background:var(--blanc);border-bottom:1px solid var(--ligne)}
+.logo{font:800 22px var(--titre);letter-spacing:-.03em;color:var(--encre)}
+.logo span{color:var(--palme)}
+nav{display:flex;gap:22px;align-items:center}
+nav a:not(.btn){font-weight:600;color:var(--muted)}nav a:not(.btn):hover{color:var(--encre)}
+
+/* boutons */
+.btn{background:var(--palme);color:#fff;border:0;border-radius:var(--rayon);padding:12px 20px;font:700 15px var(--texte);cursor:pointer;transition:background .15s,transform .15s}
+.btn:hover{background:var(--palme-fonce)}.btn:active{transform:translateY(1px)}
+.link-btn{border:0;background:none;color:var(--palme);font-weight:600;cursor:pointer;padding:0}
+.notice{color:var(--piment)}
+
+/* accueil : l'ardoise du restaurateur est l'élément mémorable */
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:6%;align-items:center;padding:clamp(48px,8vw,104px) max(5%,calc((100% - 1160px)/2))}
+.hero h1{margin:0 0 20px;font-size:clamp(44px,6.4vw,84px);letter-spacing:-.045em;color:var(--encre)}
+.hero p{font-size:19px;color:var(--muted);max-width:30em;margin:0 0 28px}
+.hero p.muted{font-size:14px;margin:14px 0 0}
+.demo{position:relative;background:var(--encre);color:#eef3ee;padding:30px 28px 26px;border-radius:14px;transform:rotate(-1.6deg);box-shadow:0 0 0 7px #8a5a2b,0 0 0 8px #5e3c1b,0 24px 48px #10241c33}
+.demo small{display:block;font:600 14px var(--texte);color:#a9c3b4;margin-bottom:4px}
+.demo h2{margin:0 0 14px;font-size:30px;color:#fff}
+.demo p{display:flex;justify-content:flex-start;align-items:center;gap:12px;margin:0;padding:12px 0;border-bottom:1px dashed #ffffff33;font-size:17px;color:#eef3ee;max-width:none}
+.demo p b{margin-left:auto}
+.demo p b,.product-foot b{background:var(--soleil);color:var(--encre);font:800 15px var(--titre);padding:4px 12px 4px 18px;clip-path:polygon(10px 0,100% 0,100% 100%,10px 100%,0 50%);white-space:nowrap}
+.tag{display:inline-block;margin-top:14px;color:var(--soleil);font-weight:700;font-size:13px}
+.eyebrow{display:none}
+
+.features{display:grid;grid-template-columns:repeat(4,1fr);background:var(--blanc);border-block:1px solid var(--ligne);padding:0 max(5%,calc((100% - 1160px)/2))}
+.features article{padding:26px 22px 26px 0}.features article+article{padding-left:22px;border-left:1px solid var(--ligne)}
+.features b{font:700 18px var(--titre)}.features p{margin:4px 0 0;color:var(--muted);font-size:15px}
+
+.content{padding:clamp(48px,7vw,88px) max(5%,calc((100% - 1160px)/2));max-width:none;margin:0}
+.content.wide{max-width:none}
+.content h2{font-size:clamp(28px,3.4vw,40px);margin:0 0 28px}
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;align-items:start}
+.plans article{background:var(--blanc);border:1px solid var(--ligne);border-radius:14px;padding:26px}
+.plans article h3{margin:0 0 6px;font-size:22px}
+.plans strong{font:800 34px var(--titre);color:var(--palme);letter-spacing:-.03em}
+.plans article .btn{width:100%;margin-top:6px}
+footer{padding:28px 5%;background:var(--encre);color:#b9ccc0;font-size:14px}
+
+/* modale */
+.modal{position:fixed;inset:0;background:#10241cd9;display:grid;place-items:center;padding:20px;z-index:50}
+.modal-card{position:relative;background:var(--blanc);padding:30px;border-radius:16px;width:min(420px,100%)}
+.modal-card h2{margin:0 0 16px;font-size:26px}
+.modal-card form{display:grid;gap:12px}
+.close{position:absolute;right:14px;top:10px;border:0;background:none;font-size:28px;color:var(--muted);cursor:pointer}
+
+@media(max-width:860px){.hero{grid-template-columns:1fr;gap:44px}.features{grid-template-columns:1fr 1fr}.features article:nth-child(3){padding-left:0;border-left:0}.plans{grid-template-columns:1fr}}
+@media(max-width:560px){nav{gap:8px}nav a[href^="#"]{display:none}.site-header .btn{padding:10px 14px}.features{grid-template-columns:1fr}.features article+article{padding-left:0;border-left:0;border-top:1px solid var(--ligne)}.demo{transform:none}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}

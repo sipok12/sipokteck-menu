@@ -5,7 +5,7 @@ Les clients consultent le menu via un QR code **sans compte** ; les restaurateur
 l'administration valide les restaurants et les paiements.
 
 ## Stack (celle réellement déployée)
-HTML / CSS / JavaScript vanilla (modules ES) · **Vite** (build multi-pages) · Supabase (PostgreSQL, Auth, Storage, Realtime) · Vercel · Chart.js · qrcode (QR).
+HTML / CSS / JavaScript vanilla (modules ES) · **Vite** (build multi-pages) · Supabase (PostgreSQL, Auth, Storage, Realtime) · Vercel · Chart.js · qrcode (QR) · polices Bricolage Grotesque + Figtree (npm).
 Bibliothèques installées via npm à version exacte et empaquetées : plus aucun CDN, CSP `script-src 'self'`.
 Langues : français et anglais. Devise : FCFA (XOF).
 
