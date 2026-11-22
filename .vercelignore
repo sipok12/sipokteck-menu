@@ -1,0 +1,6 @@
+supabase/
+tests/
+docs/
+*.md
+node_modules/
+dist/

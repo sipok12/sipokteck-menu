@@ -1,0 +1,42 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#1265d8"><meta name="referrer" content="strict-origin-when-cross-origin"><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2714%27 fill=%27%231265d8%27/%3E%3Cpath d=%27M20 22h24M20 32h24M20 42h14%27 stroke=%27white%27 stroke-width=%275%27 stroke-linecap=%27round%27/%3E%3C/svg%3E"><title>SipokMenu — Menu digital pour restaurants</title><meta name="description" content="Créez votre menu digital, partagez-le avec un QR code et recevez les commandes de vos clients."><link rel="stylesheet" href="/css/styles.css"><link rel="stylesheet" href="/css/app.css"><script src="/config.js"></script></head>
+<body>
+<a class="skip" href="#main" data-i18n="a11y.skip">Aller au contenu</a>
+<header class="site-header"><a class="logo" href="/">SIPOK<span>MENU</span></a>
+<nav><a href="#how" data-i18n="home.navHow">Fonctionnement</a><a href="#plans" data-i18n="home.navPlans">Offres</a>
+<button type="button" class="outline sm" data-lang-toggle data-i18n-aria="nav.language">EN</button>
+<a id="spaceLink" class="btn hidden" href="/dashboard" data-i18n="nav.mySpace">Mon espace</a>
+<button id="loginOpen" type="button" class="btn" data-i18n="nav.login">Connexion</button></nav></header>
+<main id="main">
+<section class="hero"><div><small class="eyebrow" data-i18n="home.eyebrow">SOLUTION DIGITALE POUR RESTAURANTS</small>
+<h1><span data-i18n="home.h1a">Votre menu.</span><br><span data-i18n="home.h1b">En un scan.</span></h1>
+<p data-i18n="home.lead">Présentez vos plats, actualisez vos prix et recevez les commandes depuis le téléphone de vos clients.</p>
+<button id="signupOpen" type="button" class="btn lg" data-i18n="home.cta">Créer mon espace</button>
+<p class="muted" data-i18n="home.noApp">Sans application à installer pour vos clients.</p></div>
+<aside class="demo"><small data-i18n="home.demoLabel">APERÇU DU MENU</small><h2 data-i18n="home.demoTitle">Bienvenue chez vous</h2>
+<p>🍔 <span data-i18n="home.demo1">Burger maison</span> <b>2 500 F</b></p><p>🍗 <span data-i18n="home.demo2">Poulet braisé</span> <b>3 500 F</b></p><p>🥤 <span data-i18n="home.demo3">Jus naturel</span> <b>1 000 F</b></p>
+<span class="tag" data-i18n="home.demoTag">MENU DIGITAL</span></aside></section>
+<section class="features"><article><b data-i18n="home.f1t">QR Code</b><p data-i18n="home.f1d">Un accès immédiat au menu.</p></article>
+<article><b data-i18n="home.f2t">Catalogue</b><p data-i18n="home.f2d">Photos, prix et catégories.</p></article>
+<article><b data-i18n="home.f3t">Commandes</b><p data-i18n="home.f3d">WhatsApp et suivi centralisé.</p></article>
+<article><b data-i18n="home.f4t">FR / EN</b><p data-i18n="home.f4d">Un menu bilingue pour vos clients.</p></article></section>
+<section id="how" class="content"><small class="eyebrow" data-i18n="home.howEyebrow">COMMENT ÇA MARCHE</small><h2 data-i18n="home.howTitle">Du scan à la commande</h2>
+<ol class="steps"><li><b data-i18n="home.s1t">Créez votre espace</b><span data-i18n="home.s1d">Inscrivez-vous et décrivez votre établissement.</span></li>
+<li><b data-i18n="home.s2t">Composez votre menu</b><span data-i18n="home.s2d">Catégories, plats, photos et prix en FCFA.</span></li>
+<li><b data-i18n="home.s3t">Partagez votre QR code</b><span data-i18n="home.s3d">Imprimez-le sur vos tables et comptoirs.</span></li>
+<li><b data-i18n="home.s4t">Recevez les commandes</b><span data-i18n="home.s4d">Suivez-les en direct depuis votre tableau de bord.</span></li></ol></section>
+<section id="plans" class="content"><small class="eyebrow" data-i18n="home.plansEyebrow">NOS OFFRES</small><h2 data-i18n="home.plansTitle">Choisissez votre formule</h2>
+<div id="plansGrid" class="plans" aria-live="polite"></div></section></main>
+<footer><span>© SipokMenu — SipokTech Digital</span></footer>
+<div id="authModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-card">
+<button id="closeModal" type="button" class="close" data-i18n-aria="common.close" aria-label="Fermer">×</button>
+<h2 id="modalTitle"></h2>
+<form id="authForm" novalidate>
+<div id="signupFields" class="stack"><input id="fullName" autocomplete="name" maxlength="100" data-i18n-placeholder="auth.fullName" placeholder="Nom complet">
+<input id="phone" type="tel" autocomplete="tel" maxlength="30" data-i18n-placeholder="auth.phone" placeholder="Téléphone"></div>
+<input id="email" type="email" autocomplete="email" required data-i18n-placeholder="auth.email" placeholder="Adresse e-mail">
+<input id="password" type="password" minlength="8" autocomplete="current-password" required data-i18n-placeholder="auth.password" placeholder="Mot de passe (8 caractères min.)">
+<button id="authSubmit" class="btn" type="submit"></button></form>
+<p id="authMessage" class="notice" role="alert"></p>
+<p class="modal-links"><button id="switchMode" type="button" class="link-btn"></button> <button id="forgotBtn" type="button" class="link-btn" data-i18n="auth.forgot">Mot de passe oublié ?</button></p>
+</div></div>
+<script type="module" src="/js/pages/home.js"></script></body></html>
