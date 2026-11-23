@@ -3,9 +3,9 @@ import { t, getLang } from '../core/i18n.js';
 import { friendlyError } from '../core/errors.js';
 import { openModal } from '../core/modal.js';
 import { config } from '../core/supabase.js';
-import { getBilling, listPlans, listPayments, requestSubscription } from '../services/billing.service.js';
+import { getBilling, listPlans, listPayments, requestSubscription, startOnlinePayment, verifyOnlinePayment } from '../services/billing.service.js';
 
-const METHODS = ['tmoney', 'flooz', 'bank_transfer', 'cash', 'other'];
+const METHODS = ['tmoney', 'flooz', 'bank_transfer', 'cash', 'other']; // moyens du paiement manuel (fedapay est géré à part)
 const TONE = { pending: 'warn', approved: 'ok', rejected: 'bad' };
 const FEATURES = ['qr_code', 'whatsapp_orders', 'basic_stats', 'customization', 'priority_support'];
 
@@ -19,6 +19,25 @@ export async function mountBilling(ctx, el) {
     [billing, plans, payments] = await Promise.all([getBilling(rid), listPlans(), listPayments(rid)]);
     render();
   }
+
+  // Retour depuis FedaPay (?payment=<id>) : le serveur relit la transaction, le navigateur ne prouve rien.
+  async function checkReturn() {
+    const url = new URL(location.href), id = url.searchParams.get('payment');
+    if (!id) return;
+    url.searchParams.delete('payment'); url.searchParams.delete('status'); url.searchParams.delete('id');
+    history.replaceState(null, '', url.pathname + url.search + url.hash);
+    try {
+      const { status } = await verifyOnlinePayment(id);
+      toast(t(`bill.online.${status === 'approved' ? 'ok' : status === 'rejected' ? 'failed' : 'wait'}`), status === 'approved' ? 'success' : 'info');
+      await load();
+    } catch (error) { toast(friendlyError(error), 'error'); }
+  }
+
+  // Les paiements en ligne enregistrent un code (online_*) que l'on traduit ici.
+  const noteText = n => (n.startsWith('online_') ? t(`note.${n}`) : n);
+  const onlineEnabled = () => config.onlinePayment === true;
+  const pendingManual = () => payments.some(p => p.status === 'pending' && p.method !== 'fedapay');
+  const pendingOnline = () => payments.some(p => p.status === 'pending' && p.method === 'fedapay');
 
   function paymentInfo() {
     // Les coordonnées de paiement viennent de config.js (paymentInfo) — jamais codées en dur ici.
@@ -35,18 +54,20 @@ export async function mountBilling(ctx, el) {
       ${active ? ` — ${esc(t('bill.until', { date: formatDate(billing.ends_at, lang), days: billing.days_left }))}` : ` — ${esc(t('bill.trialNote'))}`}</p>
       <p class="muted">${esc(t('ov.products'))} : ${billing.products}${billing.max_products != null ? ` / ${billing.max_products}` : ''}</p>${bar(billing.products, billing.max_products)}
       <p class="muted">${esc(t('ov.categories'))} : ${billing.categories}${billing.max_categories != null ? ` / ${billing.max_categories}` : ''}</p>${bar(billing.categories, billing.max_categories)}
-      ${billing.pending_payment ? `<div class="banner">${esc(t('bill.pendingBanner'))}</div>` : ''}</section>
+      ${pendingManual() ? `<div class="banner">${esc(t('bill.pendingBanner'))}</div>` : ''}
+      ${pendingOnline() ? `<div class="banner">${esc(t('bill.online.pendingBanner'))}</div>` : ''}</section>
       <section class="panel"><h2>${esc(t('bill.plans'))}</h2><div class="plan-pick">${plans.map(p => {
         const current = active && p.code === billing.plan_code;
         const feats = FEATURES.filter(k => p.features?.[k]).map(k => `<li>${esc(t(`feat.${k}`))}</li>`).join('');
         return `<article class="${current ? 'current' : ''}"><h3>${esc(p.name)}</h3><strong>${money(p.price_xof, lang)} <small>${esc(t('plans.perMonth'))}</small></strong>
           <ul><li>${esc(p.max_products == null ? t('plans.unlimitedProducts') : t('plans.upToProducts', { n: p.max_products }))}</li>
           <li>${esc(p.max_categories == null ? t('plans.unlimitedCategories') : t('plans.upToCategories', { n: p.max_categories }))}</li>${feats}</ul>
-          <button type="button" class="btn" data-plan="${esc(p.code)}" ${billing.pending_payment ? 'disabled' : ''}>${esc(t(current ? 'bill.renew' : 'bill.choose'))}</button></article>`;
+          ${onlineEnabled() ? `<button type="button" class="btn" data-online="${esc(p.code)}">${esc(t('bill.online.pay'))}</button>` : ''}
+          <button type="button" class="btn ${onlineEnabled() ? 'secondary' : ''}" data-plan="${esc(p.code)}" ${pendingManual() ? 'disabled' : ''}>${esc(t(onlineEnabled() ? 'bill.manual' : current ? 'bill.renew' : 'bill.choose'))}</button></article>`;
       }).join('')}</div></section>
       <section class="panel"><h2>${esc(t('bill.history'))}</h2>${payments.length ? `<div class="table-wrap"><table class="tbl"><thead><tr><th>${esc(t('bill.date'))}</th><th>${esc(t('bill.plan'))}</th><th>${esc(t('bill.amount'))}</th><th>${esc(t('bill.method'))}</th><th>${esc(t('bill.status'))}</th></tr></thead><tbody>
         ${payments.map(p => `<tr><td>${esc(formatDate(p.created_at, lang))}</td><td>${esc(p.subscriptions?.plans?.name || '—')}</td><td>${money(p.amount_xof, lang)}</td><td>${esc(t(`method.${p.method}`))}</td>
-        <td><span class="pill ${TONE[p.status]}">${esc(t(`pstatus.${p.status}`))}</span>${p.admin_note ? `<br><small>${esc(p.admin_note)}</small>` : ''}</td></tr>`).join('')}</tbody></table></div>`
+        <td><span class="pill ${TONE[p.status]}">${esc(t(`pstatus.${p.status}`))}</span>${p.admin_note ? `<br><small>${esc(noteText(p.admin_note))}</small>` : ''}</td></tr>`).join('')}</tbody></table></div>`
         : `<p class="empty">${esc(t('bill.noPayments'))}</p>`}</section>`;
   }
 
@@ -74,10 +95,19 @@ export async function mountBilling(ctx, el) {
     });
   }
 
-  el.addEventListener('click', e => {
+  el.addEventListener('click', async e => {
+    const online = e.target.closest('[data-online]');
+    if (online) {
+      return void withBusy(online, async () => {
+        try {
+          const { url } = await startOnlinePayment(rid, online.dataset.online);
+          location.assign(url); // paiement hébergé par FedaPay : aucune donnée de carte ou mobile money ne transite par SipokMenu
+        } catch (error) { toast(friendlyError(error), 'error'); await load(); }
+      });
+    }
     const b = e.target.closest('[data-plan]');
     if (b) requestModal(plans.find(p => p.code === b.dataset.plan));
   });
 
-  try { await load(); } catch (error) { el.innerHTML = `<p class="notice">${esc(friendlyError(error))}</p>`; }
+  try { await load(); await checkReturn(); } catch (error) { el.innerHTML = `<p class="notice">${esc(friendlyError(error))}</p>`; }
 }

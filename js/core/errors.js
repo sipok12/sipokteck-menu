@@ -16,6 +16,7 @@ const RULES = [
   [/Password should be at least/i, () => t('err.passwordShort')],
   [/WhatsApp number must/i, () => t('err.whatsapp')],
   [/payment is already waiting/i, () => t('err.paymentPending')],
+  [/Online payment is not configured|Could not start the payment/i, () => t('err.onlineUnavailable')],
   [/transaction reference or a proof/i, () => t('err.proofRequired')],
   [/Maximum number of restaurants/i, () => t('err.maxRestaurants')],
   [/web address cannot be changed/i, () => t('err.slugLocked')],

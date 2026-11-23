@@ -5,5 +5,6 @@ window.SIPOKMENU_CONFIG = {
   supabaseKey: "sb_publishable_TWuSAtVaTJ-0-Ks9nTRtMQ_v_A2Hxqz",
   // Coordonnées de paiement affichées aux restaurateurs lors d'une demande d'abonnement.
   // Laissez vide un moyen non proposé. Exemple : tmoney: "90 00 00 00 (SipokTech)"
+  onlinePayment: false, // passer à true une fois les secrets FedaPay enregistrés (docs/FEDAPAY.md)
   paymentInfo: { tmoney: "", flooz: "", bank_transfer: "", cash: "", other: "" }
 };

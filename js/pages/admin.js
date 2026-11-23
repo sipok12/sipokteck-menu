@@ -13,7 +13,9 @@ const TABS = [['overview', "Vue d'ensemble"], ['restaurants', 'Restaurants'], ['
 const R_STATUS = { pending: ['En attente', 'warn'], active: ['Actif', 'ok'], suspended: ['Suspendu', 'bad'] };
 const P_STATUS = { pending: ['À valider', 'warn'], approved: ['Approuvé', 'ok'], rejected: ['Refusé', 'bad'] };
 const S_STATUS = { pending: 'En attente', active: 'Actif', past_due: 'Impayé', cancelled: 'Annulé', expired: 'Expiré' };
-const METHOD = { tmoney: 'T-Money', flooz: 'Flooz', bank_transfer: 'Virement', cash: 'Espèces', other: 'Autre' };
+const METHOD = { tmoney: 'T-Money', flooz: 'Flooz', bank_transfer: 'Virement', cash: 'Espèces', other: 'Autre', fedapay: 'En ligne (FedaPay)' };
+const ONLINE_NOTE = { online_confirmed: 'Paiement en ligne confirmé par FedaPay', online_abandoned: 'Paiement en ligne abandonné', online_start_failed: 'Paiement en ligne non démarré',
+  online_canceled: 'Paiement annulé', online_declined: 'Paiement refusé', online_refunded: 'Paiement remboursé', online_expired: 'Paiement expiré', online_transferred: 'Paiement transféré' };
 const ACTION = { restaurant_created: 'Restaurant créé', restaurant_status_changed: 'Statut restaurant modifié', payment_submitted: 'Paiement soumis',
   payment_reviewed: 'Paiement traité', subscription_status_changed: 'Abonnement modifié', plan_updated: 'Offre modifiée' };
 const pill = (map, key) => `<span class="pill ${map[key]?.[1] || 'grey'}">${esc(map[key]?.[0] || key)}</span>`;
@@ -50,7 +52,7 @@ const VIEWS = {
       <div class="table-wrap"><table class="tbl"><thead><tr><th>Date</th><th>Restaurant</th><th>Offre</th><th>Montant</th><th>Moyen / référence</th><th>Statut</th><th></th></tr></thead><tbody>
       ${list.map(p => `<tr><td>${esc(formatDate(p.created_at, 'fr', true))}</td><td>${esc(p.restaurants?.name || '—')}</td><td>${esc(p.subscriptions?.plans?.name || '—')}</td><td>${money(p.amount_xof)}</td>
         <td>${esc(METHOD[p.method] || p.method)}<br><small>${esc(p.transaction_reference || 'sans référence')}</small>${p.proof_path ? `<br><button type="button" class="link-btn" data-proof="${esc(p.proof_path)}">Voir le justificatif</button>` : ''}</td>
-        <td>${pill(P_STATUS, p.status)}${p.admin_note ? `<br><small>${esc(p.admin_note)}</small>` : ''}</td>
+        <td>${pill(P_STATUS, p.status)}${p.admin_note ? `<br><small>${esc(ONLINE_NOTE[p.admin_note] || p.admin_note)}</small>` : ''}</td>
         <td class="actions">${p.status === 'pending' ? `<button type="button" class="btn sm" data-review="${esc(p.id)}" data-d="approved">Approuver</button> <button type="button" class="btn sm danger" data-review="${esc(p.id)}" data-d="rejected">Refuser</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="7" class="empty">Aucun paiement.</td></tr>'}</tbody></table></div>`;
   },
   async plans() {

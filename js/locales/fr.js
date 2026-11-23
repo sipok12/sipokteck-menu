@@ -80,6 +80,12 @@ export const fr = {
   'bill.proof': 'Justificatif (capture ou PDF)', 'bill.proofHint': 'JPG, PNG, WebP ou PDF — 5 Mo maximum.', 'bill.reference': 'Référence de transaction', 'bill.renew': 'Renouveler',
   'bill.requestTitle': 'Offre {plan}', 'bill.sent': "Demande envoyée. Elle sera validée par l'administration.", 'bill.status': 'Statut', 'bill.submit': 'Envoyer ma demande',
   'bill.trial': 'Période d’essai', 'bill.trialNote': 'limites de l’offre Starter', 'bill.until': "jusqu'au {date} ({days} j restants)",
+  'bill.manual': 'Payer manuellement', 'bill.online.pay': 'Payer en ligne', 'bill.online.ok': 'Paiement confirmé : votre abonnement est actif.',
+  'bill.online.wait': 'Paiement en cours de confirmation. Cette page se mettra à jour dès sa validation.', 'bill.online.failed': "Le paiement n'a pas abouti. Vous pouvez réessayer.",
+  'bill.online.pendingBanner': 'Un paiement en ligne est en cours de confirmation.', 'err.onlineUnavailable': "Le paiement en ligne n'est pas disponible pour le moment.",
+  'method.fedapay': 'En ligne (FedaPay)',
+  'note.online_confirmed': 'Confirmé par FedaPay', 'note.online_abandoned': 'Abandonné', 'note.online_start_failed': 'Non démarré', 'note.online_canceled': 'Annulé',
+  'note.online_declined': 'Refusé', 'note.online_refunded': 'Remboursé', 'note.online_expired': 'Expiré', 'note.online_transferred': 'Transféré',
   'method.bank_transfer': 'Virement bancaire', 'method.cash': 'Espèces', 'method.flooz': 'Flooz', 'method.other': 'Autre', 'method.tmoney': 'T-Money',
   'pstatus.approved': 'Approuvé', 'pstatus.pending': 'En vérification', 'pstatus.rejected': 'Refusé',
 

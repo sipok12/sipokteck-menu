@@ -80,6 +80,12 @@ export const en = {
   'bill.proof': 'Proof (screenshot or PDF)', 'bill.proofHint': 'JPG, PNG, WebP or PDF — 5 MB maximum.', 'bill.reference': 'Transaction reference', 'bill.renew': 'Renew',
   'bill.requestTitle': '{plan} plan', 'bill.sent': 'Request sent. It will be validated by the administration.', 'bill.status': 'Status', 'bill.submit': 'Send my request',
   'bill.trial': 'Trial period', 'bill.trialNote': 'Starter plan limits', 'bill.until': 'until {date} ({days} days left)',
+  'bill.manual': 'Pay manually', 'bill.online.pay': 'Pay online', 'bill.online.ok': 'Payment confirmed: your subscription is active.',
+  'bill.online.wait': 'Payment is being confirmed. This page will update once it is validated.', 'bill.online.failed': 'The payment did not go through. You can try again.',
+  'bill.online.pendingBanner': 'An online payment is being confirmed.', 'err.onlineUnavailable': 'Online payment is not available right now.',
+  'method.fedapay': 'Online (FedaPay)',
+  'note.online_confirmed': 'Confirmed by FedaPay', 'note.online_abandoned': 'Abandoned', 'note.online_start_failed': 'Not started', 'note.online_canceled': 'Cancelled',
+  'note.online_declined': 'Declined', 'note.online_refunded': 'Refunded', 'note.online_expired': 'Expired', 'note.online_transferred': 'Transferred',
   'method.bank_transfer': 'Bank transfer', 'method.cash': 'Cash', 'method.flooz': 'Flooz', 'method.other': 'Other', 'method.tmoney': 'T-Money',
   'pstatus.approved': 'Approved', 'pstatus.pending': 'Under review', 'pstatus.rejected': 'Rejected',
 
