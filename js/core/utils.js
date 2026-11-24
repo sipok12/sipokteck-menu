@@ -65,3 +65,9 @@ export function copyText(text) {
   document.execCommand('copy'); area.remove();
   return Promise.resolve();
 }
+
+/** Lien WhatsApp avec message prérempli ; rien n'est envoyé sans action de la personne. Retourne '' si le numéro est inutilisable. */
+export function waLink(phone, text = '') {
+  const number = digits(phone);
+  return number.length >= 8 ? `https://wa.me/${number}${text ? `?text=${encodeURIComponent(text)}` : ''}` : '';
+}

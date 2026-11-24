@@ -3,11 +3,12 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 // ---- Environnement navigateur minimal + client Supabase simulé ----
-const mock = { log: [], queue: [], rpcResult: { data: { ok: true }, error: null }, uploaded: [] };
+const mock = { log: [], filters: [], queue: [], rpcResult: { data: { ok: true }, error: null }, uploaded: [] };
 const take = () => (mock.queue.length ? mock.queue.shift() : { data: [], error: null });
 function query(table, op, payload) {
   const q = {
-    select: () => (mock.log.push([table, 'select']), q), eq: () => q, in: () => q, or: () => q, order: () => q, limit: () => q,
+    select: () => (mock.log.push([table, 'select']), q), eq: (c, v) => (mock.filters.push([table, 'eq', c, v]), q), in: () => q, or: f => (mock.filters.push([table, 'or', f]), q), order: () => q, limit: () => q,
+    gte: () => q, lt: () => q, range: (a, b) => (mock.filters.push([table, 'range', a, b]), q),
     insert: p => (mock.log.push([table, 'insert', p]), q), update: p => (mock.log.push([table, 'update', p]), q), delete: () => (mock.log.push([table, 'delete']), q),
     maybeSingle: () => Promise.resolve(take()), single: () => Promise.resolve(take()),
     then: (res, rej) => Promise.resolve(take()).then(res, rej)
@@ -25,7 +26,7 @@ globalThis.__SIPOKMENU_CLIENT_FACTORY__ = () => ({
 });
 globalThis.document = { documentElement: {}, querySelectorAll: () => [] };
 globalThis.localStorage = { _s: {}, getItem(k) { return this._s[k] ?? null; }, setItem(k, v) { this._s[k] = String(v); } };
-const reset = () => { mock.log.length = 0; mock.queue.length = 0; mock.uploaded.length = 0; };
+const reset = () => { mock.log.length = 0; mock.filters.length = 0; mock.queue.length = 0; mock.uploaded.length = 0; };
 
 const U = await import('../js/core/utils.js');
 const I = await import('../js/core/i18n.js');
@@ -35,6 +36,7 @@ const C = await import('../js/services/catalog.service.js');
 const B = await import('../js/services/billing.service.js');
 const O = await import('../js/services/orders.service.js');
 const S = await import('../js/services/storage.service.js');
+const M = await import('../js/services/messages.service.js');
 const { fr } = await import('../js/locales/fr.js');
 const { en } = await import('../js/locales/en.js');
 
@@ -153,4 +155,36 @@ test('getStats / getBilling : appels RPC attendus', async () => {
   reset(); await B.getStats('r1', 30); await B.getBilling('r1');
   assert.deepEqual(mock.log.filter(l => l[0] === 'rpc').map(l => [l[1], l[2]]),
     [['restaurant_stats', { p_restaurant_id: 'r1', p_days: 30 }], ['my_billing', { p_restaurant_id: 'r1' }]]);
+});
+
+test('waLink : message prérempli, rien sans numéro valide', () => {
+  assert.equal(U.waLink('+228 90 00 00 00', 'Bonjour #12'), 'https://wa.me/22890000000?text=Bonjour%20%2312');
+  assert.equal(U.waLink('12', 'x'), ''); assert.equal(U.waLink('', 'x'), '');
+});
+test('historique : recherche assainie (pas d\'injection dans le filtre or)', async () => {
+  reset(); mock.queue.push({ data: [], error: null, count: 0 });
+  await O.searchOrders('r1', { from: 'a', to: 'b', status: 'open', q: 'x,customer_phone.eq.1)%', offset: 30, limit: 30 });
+  const or = mock.filters.find(l => l[1] === 'or')[2];
+  assert.ok(!/[()]/.test(or.replace(/\.ilike\./g, '')) && !or.includes('%)'), or);
+  assert.equal(or.split(',').length, 2); // aucune virgule injectée : seulement nom et téléphone
+  assert.deepEqual(mock.filters.find(l => l[1] === 'range').slice(2), [30, 59]);
+  reset(); mock.queue.push({ data: [], error: null, count: 0 });
+  await O.searchOrders('r1', { from: 'a', to: 'b', q: '#42' });
+  assert.match(mock.filters.find(l => l[1] === 'or')[2], /order_number\.eq\.42/);
+});
+test('messagerie : le client passe uniquement par le jeton, le restaurant par l\'identifiant de commande', async () => {
+  reset();
+  await M.customerSend('abc', 'salut'); await M.customerMessages('abc', true); await M.trackOrder('abc');
+  await M.sendMessage('o1', 'ok'); await M.markRead('o1'); await M.listConversations('r1');
+  assert.deepEqual(mock.log.filter(l => l[0] === 'rpc').map(l => [l[1], l[2]]), [
+    ['customer_send_message', { p_token: 'abc', p_content: 'salut' }], ['customer_messages', { p_token: 'abc', p_mark_read: true }],
+    ['track_order', { p_token: 'abc' }], ['send_restaurant_message', { p_order_id: 'o1', p_content: 'ok' }],
+    ['mark_order_messages_read', { p_order_id: 'o1' }], ['list_conversations', { p_restaurant_id: 'r1' }]]);
+});
+test('erreurs de messagerie traduites, jamais brutes', () => {
+  I.setLang('fr', false);
+  for (const m of ['Invalid or expired link', 'Too many messages. Please wait', 'Messaging is closed for this order', 'Invalid message']) {
+    const text = E.friendlyError({ message: m });
+    assert.notEqual(text, m); assert.ok(!/^err\./.test(text), text);
+  }
 });

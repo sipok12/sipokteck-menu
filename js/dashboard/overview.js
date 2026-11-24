@@ -2,6 +2,7 @@ import { esc, money, copyText, toast } from '../core/utils.js';
 import { t, getLang } from '../core/i18n.js';
 import { friendlyError } from '../core/errors.js';
 import { getStats } from '../services/billing.service.js';
+import { drawSalesChart } from './sales-chart.js';
 
 let chart = null;
 
@@ -57,17 +58,8 @@ export async function mountOverview(ctx, el, orders) {
         <div><h3>${esc(t('ov.byStatus'))}</h3><ol class="rank">${Object.entries(s.by_status || {}).map(([k, n]) => `<li><span>${esc(t(`status.${k}`))}</span><b>${n}</b></li>`).join('') || `<li class="muted">${esc(t('ov.noData'))}</li>`}</ol></div></div>`;
       box.querySelectorAll('[data-days]').forEach(b => b.addEventListener('click', () => { days = Number(b.dataset.days); drawStats(); }));
       chart?.destroy(); chart = null;
-      const { default: Chart } = await import('chart.js/auto').catch(() => ({ default: null }));
-      if (Chart) {
-        const css = getComputedStyle(document.documentElement);
-        chart = new Chart(box.querySelector('#statsChart'), {
-          data: { labels: s.daily.map(d => d.day.slice(5)), datasets: [
-            { type: 'bar', label: t('ov.revenue'), data: s.daily.map(d => d.revenue), backgroundColor: '#bfdccd', yAxisID: 'y' },
-            { type: 'line', label: t('ov.orders'), data: s.daily.map(d => d.orders), borderColor: css.getPropertyValue('--blue').trim() || '#0b6e4f', tension: .3, yAxisID: 'y1' }] },
-          options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
-            scales: { y: { beginAtZero: true, title: { display: true, text: 'FCFA' } }, y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, ticks: { precision: 0 } } } }
-        });
-      } else box.querySelector('.chart-box').innerHTML = `<p class="muted">${esc(t('ov.chartUnavailable'))}</p>`;
+      chart = await drawSalesChart(box.querySelector('#statsChart'), s.daily);
+      if (!chart) box.querySelector('.chart-box').innerHTML = `<p class="muted">${esc(t('ov.chartUnavailable'))}</p>`;
     } catch (error) { box.innerHTML = `<p class="notice">${esc(friendlyError(error))}</p>`; }
   }
   drawStats();

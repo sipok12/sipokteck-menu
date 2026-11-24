@@ -31,7 +31,7 @@ for (const f of js) {
 
 // clés i18n utilisées vs définies
 const { fr } = await import('../js/locales/fr.js'); const { en } = await import('../js/locales/en.js');
-const prefixes = 'a11y|act|auth|bill|cat|common|dash|err|feat|home|menu|method|nav|onb|ord|ov|pay|plans|prod|pstatus|qr|reset|set|status|tab|type';
+const prefixes = 'a11y|act|hist|msg|trk|wa|auth|bill|cat|common|dash|err|feat|home|menu|method|nav|onb|ord|ov|pay|plans|prod|pstatus|qr|reset|set|status|tab|type';
 const keyRe = new RegExp(`['"\`]((?:${prefixes})\\.[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)*)['"\`]`, 'g');
 const used = new Set();
 for (const f of [...js.filter(x => !x.includes('/locales/')), ...html]) for (const m of read(f).matchAll(keyRe)) used.add(m[1]);

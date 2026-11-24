@@ -101,6 +101,7 @@ function showConfirmation(order, link, viaWhatsapp) {
   $('confirmation').innerHTML = `<h3>✅ ${esc(t('menu.saved', { n: order.order_number ?? '' }))}</h3>
     <p>${esc(t('menu.savedText', { total: fmt(order.total_xof) }))}</p>
     ${viaWhatsapp ? (link ? `<a class="btn wa" href="${esc(link)}" target="_blank" rel="noopener">💬 ${esc(t('menu.sendWhatsapp'))}</a>` : `<p class="notice">${esc(t('menu.noWhatsapp'))}</p>`) : ''}
+    ${order.tracking_token ? `<p><a class="btn" href="/suivi#${esc(order.tracking_token)}">${esc(t('menu.trackOrder'))}</a><br><small class="muted">${esc(t('menu.trackHint'))}</small></p>` : ''}
     <p><button type="button" class="btn secondary" id="newOrder">${esc(t('menu.newOrder'))}</button></p>`;
   $('confirmation').classList.remove('hidden');
   $('newOrder').onclick = closeCart;

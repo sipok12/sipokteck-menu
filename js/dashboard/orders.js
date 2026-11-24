@@ -1,4 +1,4 @@
-import { esc, money, digits, formatDate, toast } from '../core/utils.js';
+import { esc, money, waLink, formatDate, toast } from '../core/utils.js';
 import { t, getLang } from '../core/i18n.js';
 import { friendlyError } from '../core/errors.js';
 import { confirmDialog } from '../core/modal.js';
@@ -39,13 +39,13 @@ export function createOrders(ctx) {
   }
 
   function card(o) {
-    const lang = getLang(), next = NEXT[o.status], wa = digits(o.customer_phone);
+    const lang = getLang(), next = NEXT[o.status], wa = waLink(o.customer_phone, t('wa.order', { n: o.order_number, restaurant: ctx.restaurant.name }));
     return `<article class="order ${fresh.has(o.id) ? 'new' : ''}" data-id="${esc(o.id)}">
       <header><strong>${esc(t('ord.order'))} #${esc(o.order_number)}</strong>
         <span><span class="pill ${TONE[o.status]}">${esc(t(`status.${o.status}`))}</span> <span class="pill grey">${esc(t(`type.${o.order_type}`))}</span>
         ${o.source === 'whatsapp' ? '<span class="pill ok">WhatsApp</span>' : ''}</span></header>
       <p class="sub">${esc(formatDate(o.created_at, lang, true))} · <strong>${esc(o.customer_name)}</strong> ·
-        <a href="tel:${esc(o.customer_phone.replace(/[^0-9+]/g, ''))}">${esc(o.customer_phone)}</a>${wa ? ` · <a href="https://wa.me/${esc(wa)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}</p>
+        <a href="tel:${esc(o.customer_phone.replace(/[^0-9+]/g, ''))}">${esc(o.customer_phone)}</a>${wa ? ` · <a href="${esc(wa)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}</p>
       <ul>${(o.order_items || []).map(i => `<li>${esc(i.quantity)} × ${esc(i.product_name)} — ${money(i.line_total_xof, lang)}</li>`).join('')}</ul>
       ${o.delivery_address ? `<p class="sub">📍 ${esc(o.delivery_address)}</p>` : ''}${o.customer_note ? `<p class="sub">📝 ${esc(o.customer_note)}</p>` : ''}
       <div class="foot"><strong>${money(o.total_xof, lang)}</strong>
@@ -53,6 +53,7 @@ export function createOrders(ctx) {
           ${['unpaid', 'paid', 'refunded'].map(s => `<option value="${s}" ${o.payment_status === s ? 'selected' : ''}>${esc(t(`pay.${s}`))}</option>`).join('')}${o.payment_status === 'pending' ? `<option value="pending" selected>${esc(t('pay.pending'))}</option>` : ''}</select></label>
         <span class="acts">${next ? `<button type="button" class="btn sm" data-next="${esc(o.id)}" data-to="${next}">${esc(t(`act.${next}`))}</button>` : ''}
         ${isOpen(o) ? `<button type="button" class="outline sm" data-cancel="${esc(o.id)}">${esc(t('act.cancelled'))}</button>` : ''}
+        <button type="button" class="outline sm" data-msg="${esc(o.id)}">${esc(t('msg.open'))}</button>
         <button type="button" class="outline sm" data-history="${esc(o.id)}">${esc(t('ord.history'))}</button></span></div>
       <ul class="history hidden" id="hist-${esc(o.id)}"></ul></article>`;
   }
@@ -85,6 +86,7 @@ export function createOrders(ctx) {
     el.addEventListener('click', async e => {
       const b = e.target.closest('button'); if (!b) return;
       if (b.id === 'oRefresh') return refresh(false);
+      if (b.dataset.msg) return ctx.openConversation(b.dataset.msg);
       if (b.dataset.next) return change(b.dataset.next, b.dataset.to);
       if (b.dataset.cancel && await confirmDialog(esc(t('ord.confirmCancel')), t('act.cancelled'), t('common.back'))) return change(b.dataset.cancel, 'cancelled');
       if (b.dataset.history) {

@@ -7,16 +7,18 @@ import { getBilling } from '../services/billing.service.js';
 import { renderOnboarding } from '../dashboard/onboarding.js';
 import { mountOverview, updateOverviewCounts } from '../dashboard/overview.js';
 import { createOrders } from '../dashboard/orders.js';
+import { createMessages } from '../dashboard/messages.js';
+import { mountHistory } from '../dashboard/history.js';
 import { mountProducts } from '../dashboard/products.js';
 import { mountCategories } from '../dashboard/categories.js';
 import { mountBilling } from '../dashboard/billing.js';
 import { mountSettings } from '../dashboard/settings.js';
 
 const app = $('app');
-const ALL_TABS = ['overview', 'orders', 'products', 'categories', 'billing', 'settings'];
-const STAFF_TABS = ['overview', 'orders', 'products', 'categories']; // le personnel ne gère ni abonnement ni paramètres
+const ALL_TABS = ['overview', 'orders', 'history', 'messages', 'products', 'categories', 'billing', 'settings'];
+const STAFF_TABS = ['overview', 'orders', 'history', 'messages', 'products', 'categories']; // le personnel ne gère ni abonnement ni paramètres
 const badges = {};
-let ctx, ordersModule, restaurants, tabs, active, mounted;
+let ctx, ordersModule, messagesModule, restaurants, tabs, active, mounted;
 
 function bannerHtml(r) {
   if (r.status === 'pending') return `<div class="banner">${esc(t('dash.pendingBanner'))}</div>`;
@@ -47,9 +49,10 @@ function activate(tab, push = true) {
   if (push) history.replaceState(null, '', `#${tab}`);
   const el = $(`tab-${tab}`);
   if (tab === 'orders') ordersModule.mount(el);
-  else if (tab === 'overview' || !mounted.has(tab)) {
+  else if (tab === 'messages') messagesModule.mount(el);
+  else if (tab === 'overview' || tab === 'history' || !mounted.has(tab)) {
     mounted.add(tab);
-    const run = { overview: () => mountOverview(ctx, el, ordersModule.list()), products: () => mountProducts(ctx, el),
+    const run = { history: () => mountHistory(ctx, el), overview: () => mountOverview(ctx, el, ordersModule.list()), products: () => mountProducts(ctx, el),
       categories: () => mountCategories(ctx, el), billing: () => mountBilling(ctx, el), settings: () => mountSettings(ctx, el) }[tab];
     Promise.resolve(run()).catch(error => { el.innerHTML = `<p class="notice">${esc(friendlyError(error))}</p>`; });
   }
@@ -84,13 +87,15 @@ async function init() {
       user, profile, restaurant, canManage, setBadge,
       go: tab => activate(tab),
       refreshHeader() { $('banner').innerHTML = bannerHtml(ctx.restaurant); app.querySelector('h1').textContent = ctx.restaurant.name; },
+      openConversation: id => { activate('messages'); messagesModule.open(id); },
       ordersChanged: list => updateOverviewCounts($('tab-overview'), list),
       getBilling: () => (canManage ? getBilling(restaurant.id).catch(() => null) : Promise.resolve(null))
     };
     ordersModule = createOrders(ctx);
-    await ordersModule.start(); // première lecture des commandes avant d'afficher l'aperçu
+    messagesModule = createMessages(ctx);
+    await Promise.all([ordersModule.start(), messagesModule.start()]); // premières lectures avant d'afficher l'aperçu
     renderShell();
-    window.addEventListener('pagehide', () => ordersModule.destroy());
+    window.addEventListener('pagehide', () => { ordersModule.destroy(); messagesModule.destroy(); });
     window.addEventListener('hashchange', () => activate(location.hash.slice(1), false));
     applyI18n();
   } catch (error) {
