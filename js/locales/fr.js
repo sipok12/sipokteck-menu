@@ -197,5 +197,14 @@ export const fr = {
   'menu.phone': 'Téléphone', 'menu.pickup': 'À emporter', 'menu.saved': 'Commande n°{n} enregistrée', 'menu.savedText': 'Total à régler : {total}. Le restaurant va confirmer votre commande.',
   'menu.search': 'Rechercher un plat…', 'menu.sendWhatsapp': 'Envoyer sur WhatsApp', 'menu.sending': 'Envoi de la commande…', 'menu.title': 'Notre menu',
   'menu.unavailable': "Ce menu n'est pas disponible ou attend encore sa validation.", 'menu.viewCart': 'Voir mon panier',
-  'menu.waText': 'Bonjour {restaurant}, ma commande n°{order} :\n{lines}\nTotal : {total}\nClient : {name} / {phone}', 'menu.yourOrder': 'Votre commande'
+  'menu.waText': 'Bonjour {restaurant}, ma commande n°{order} :\n{lines}\nTotal : {total}\nClient : {name} / {phone}', 'menu.yourOrder': 'Votre commande',
+  'menu.payTitle': 'Paiement', 'menu.payCash': 'Payer à la réception', 'menu.payOnline': 'Payer maintenant (T-Money, Moov Money, carte bancaire)',
+  'menu.payFailed': "Votre commande est enregistrée, mais le paiement en ligne n'a pas pu démarrer.",
+  'trk.payNow': 'Payer en ligne', 'trk.payHint': 'T-Money, Moov Money ou carte bancaire.', 'trk.payChecking': 'Vérification du paiement…',
+  'trk.payOk': 'Paiement reçu. Merci !', 'trk.payWait': "Paiement non confirmé pour l'instant. Réessayez dans un instant.", 'trk.payFail': "Le paiement n'a pas abouti. Vous pouvez réessayer.",
+  'set.pay.title': 'Paiement en ligne des clients', 'set.pay.intro': "Vos clients paient avec T-Money, Moov Money ou carte. L'argent va directement sur votre compte FedaPay : SipokMenu ne le touche jamais.",
+  'set.pay.env': 'Environnement', 'set.pay.sandbox': 'Test (sandbox)', 'set.pay.live': 'Réel (live)', 'set.pay.key': 'Clé secrète FedaPay', 'set.pay.keyHint': 'Chiffrée à l\'enregistrement, jamais réaffichée.',
+  'set.pay.webhook': 'Secret du webhook (facultatif)', 'set.pay.url': 'Adresse du webhook à copier dans FedaPay', 'set.pay.events': 'Événements : transaction.approved, transaction.canceled, transaction.declined.',
+  'set.pay.copy': "Copier l'adresse", 'set.pay.copied': 'Adresse copiée', 'set.pay.save': 'Enregistrer et activer', 'set.pay.disable': 'Désactiver',
+  'set.pay.on': 'Activé ({env}) — clé {hint}', 'set.pay.off': 'Désactivé', 'set.pay.saved': 'Paiement en ligne activé', 'set.pay.disabled': 'Paiement en ligne désactivé', 'set.pay.keyMissing': 'Saisissez votre clé secrète FedaPay.'
 };

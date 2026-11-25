@@ -1,7 +1,7 @@
 import { sb } from '../core/supabase.js';
 import { slugify } from '../core/utils.js';
 
-const PUBLIC_COLS = 'id,name,slug,description,logo_url,cover_url,phone,whatsapp,address,city,default_language,currency';
+const PUBLIC_COLS = 'id,name,slug,description,logo_url,cover_url,phone,whatsapp,address,city,default_language,currency,online_payments';
 const EDITABLE = ['name', 'description', 'phone', 'whatsapp', 'address', 'city', 'default_language', 'logo_url', 'cover_url'];
 
 /** Restaurants dont l'utilisateur est membre (owner/admin/staff). */

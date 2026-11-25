@@ -197,5 +197,14 @@ export const en = {
   'menu.phone': 'Phone', 'menu.pickup': 'Pickup', 'menu.saved': 'Order #{n} saved', 'menu.savedText': 'Total to pay: {total}. The restaurant will confirm your order.',
   'menu.search': 'Search a dish…', 'menu.sendWhatsapp': 'Send on WhatsApp', 'menu.sending': 'Sending your order…', 'menu.title': 'Our menu',
   'menu.unavailable': 'This menu is not available or is still awaiting validation.', 'menu.viewCart': 'View my cart',
-  'menu.waText': 'Hello {restaurant}, my order #{order}:\n{lines}\nTotal: {total}\nCustomer: {name} / {phone}', 'menu.yourOrder': 'Your order'
+  'menu.waText': 'Hello {restaurant}, my order #{order}:\n{lines}\nTotal: {total}\nCustomer: {name} / {phone}', 'menu.yourOrder': 'Your order',
+  'menu.payTitle': 'Payment', 'menu.payCash': 'Pay on receipt', 'menu.payOnline': 'Pay now (T-Money, Moov Money, bank card)',
+  'menu.payFailed': 'Your order is saved, but online payment could not start.',
+  'trk.payNow': 'Pay online', 'trk.payHint': 'T-Money, Moov Money or bank card.', 'trk.payChecking': 'Checking your payment…',
+  'trk.payOk': 'Payment received. Thank you!', 'trk.payWait': 'Payment not confirmed yet. Try again in a moment.', 'trk.payFail': 'The payment did not go through. You can try again.',
+  'set.pay.title': 'Customer online payment', 'set.pay.intro': 'Customers pay with T-Money, Moov Money or card. Money goes straight to your FedaPay account: SipokMenu never holds it.',
+  'set.pay.env': 'Environment', 'set.pay.sandbox': 'Test (sandbox)', 'set.pay.live': 'Live', 'set.pay.key': 'FedaPay secret key', 'set.pay.keyHint': 'Encrypted when saved, never shown again.',
+  'set.pay.webhook': 'Webhook secret (optional)', 'set.pay.url': 'Webhook address to paste in FedaPay', 'set.pay.events': 'Events: transaction.approved, transaction.canceled, transaction.declined.',
+  'set.pay.copy': 'Copy address', 'set.pay.copied': 'Address copied', 'set.pay.save': 'Save and enable', 'set.pay.disable': 'Disable',
+  'set.pay.on': 'Enabled ({env}) — key {hint}', 'set.pay.off': 'Disabled', 'set.pay.saved': 'Online payment enabled', 'set.pay.disabled': 'Online payment disabled', 'set.pay.keyMissing': 'Enter your FedaPay secret key.'
 };

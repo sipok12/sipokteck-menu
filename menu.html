@@ -28,6 +28,9 @@
 <textarea id="customerNote" maxlength="1000" rows="2" data-i18n-placeholder="menu.note" placeholder="Note facultative"></textarea>
 <label class="radio"><input type="radio" name="channel" value="internal" checked> <span data-i18n="menu.chanInternal">Enregistrer la commande</span></label>
 <label class="radio"><input type="radio" name="channel" value="whatsapp"> <span data-i18n="menu.chanWhatsapp">Envoyer aussi sur WhatsApp</span></label>
+<fieldset id="payChoice" class="pay-choice hidden"><legend data-i18n="menu.payTitle">Paiement</legend>
+<label class="radio"><input type="radio" name="payWith" value="cash" checked> <span data-i18n="menu.payCash">Payer à la réception</span></label>
+<label class="radio"><input type="radio" name="payWith" value="online"> <span data-i18n="menu.payOnline">Payer maintenant (T-Money, Moov Money, carte)</span></label></fieldset>
 <button id="checkoutBtn" class="btn lg" type="submit" data-i18n="menu.confirm">Confirmer la commande</button></form>
 <p id="checkoutMessage" class="notice" role="alert"></p>
 <div id="confirmation" class="confirmation hidden"></div></div></div>

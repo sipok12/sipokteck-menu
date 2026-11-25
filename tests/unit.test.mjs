@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 // ---- Environnement navigateur minimal + client Supabase simulé ----
-const mock = { log: [], filters: [], queue: [], rpcResult: { data: { ok: true }, error: null }, uploaded: [] };
+const mock = { log: [], filters: [], queue: [], rpcResult: { data: { ok: true }, error: null }, uploaded: [], fn: [], fnResult: { data: { url: 'https://pay.example/x' }, error: null } };
 const take = () => (mock.queue.length ? mock.queue.shift() : { data: [], error: null });
 function query(table, op, payload) {
   const q = {
@@ -22,11 +22,12 @@ globalThis.__SIPOKMENU_CLIENT_FACTORY__ = () => ({
   from: t => query(t),
   rpc: (name, args) => (mock.log.push(['rpc', name, args]), Promise.resolve(mock.rpcResult)),
   storage: { from: bucket => ({ upload: (path, file) => (mock.uploaded.push([bucket, path, file.type]), Promise.resolve({ error: null })), getPublicUrl: p => ({ data: { publicUrl: `https://x.supabase.co/storage/v1/object/public/b/${p}` } }) }) },
+  functions: { invoke: (name, opts) => (mock.fn.push([name, opts.body]), Promise.resolve(mock.fnResult)) },
   auth: {}, channel: () => ({ on() { return this; }, subscribe() { return this; } }), removeChannel() {}
 });
 globalThis.document = { documentElement: {}, querySelectorAll: () => [] };
 globalThis.localStorage = { _s: {}, getItem(k) { return this._s[k] ?? null; }, setItem(k, v) { this._s[k] = String(v); } };
-const reset = () => { mock.log.length = 0; mock.filters.length = 0; mock.queue.length = 0; mock.uploaded.length = 0; };
+const reset = () => { mock.log.length = 0; mock.filters.length = 0; mock.queue.length = 0; mock.uploaded.length = 0; mock.fn.length = 0; mock.fnResult = { data: { url: 'https://pay.example/x' }, error: null }; };
 
 const U = await import('../js/core/utils.js');
 const I = await import('../js/core/i18n.js');
@@ -37,6 +38,8 @@ const B = await import('../js/services/billing.service.js');
 const O = await import('../js/services/orders.service.js');
 const S = await import('../js/services/storage.service.js');
 const M = await import('../js/services/messages.service.js');
+const P = await import('../js/services/payments.service.js');
+const TT = await import('../js/core/track-token.js');
 const { fr } = await import('../js/locales/fr.js');
 const { en } = await import('../js/locales/en.js');
 
@@ -187,4 +190,35 @@ test('erreurs de messagerie traduites, jamais brutes', () => {
     const text = E.friendlyError({ message: m });
     assert.notEqual(text, m); assert.ok(!/^err\./.test(text), text);
   }
+});
+
+test('paiement client : seul le jeton est envoyé, jamais un montant', async () => {
+  reset();
+  const out = await P.startOrderPayment('ab'.repeat(24));
+  assert.equal(out.url, 'https://pay.example/x');
+  assert.deepEqual(mock.fn[0], ['fedapay-orders', { action: 'checkout', token: 'ab'.repeat(24) }]);
+  await P.verifyOrderPayment('cd'.repeat(24));
+  assert.deepEqual(mock.fn[1], ['fedapay-orders', { action: 'verify', token: 'cd'.repeat(24) }]);
+  assert.ok(!JSON.stringify(mock.fn).match(/amount|total/i));
+});
+
+test('paiement restaurateur : réglages via la fonction serveur, clé transmise une seule fois', async () => {
+  reset();
+  await P.savePaymentSettings('r1', { env: 'sandbox', secretKey: 'sk_sandbox_' + 'x'.repeat(20), webhookSecret: '' });
+  assert.equal(mock.fn[0][1].action, 'settings_save');
+  assert.equal(mock.fn[0][1].restaurant_id, 'r1');
+  await P.getPaymentSettings('r1'); await P.disablePaymentSettings('r1');
+  assert.deepEqual(mock.fn.slice(1).map(c => c[1].action), ['settings_status', 'settings_disable']);
+});
+
+test('paiement : erreur serveur remontée avec son message, erreurs traduites', async () => {
+  reset();
+  mock.fnResult = { data: null, error: { message: 'non-2xx', context: { json: async () => ({ error: 'Online payment is not available', code: 'P0001' }) } } };
+  await assert.rejects(() => P.startOrderPayment('ab'.repeat(24)), e => e.message === 'Online payment is not available' && e.code === 'P0001');
+  assert.ok(E.friendlyError(new Error('Online payment is not available')).length > 10);
+  assert.notEqual(E.friendlyError(new Error('FedaPay rejected this key')), E.friendlyError(new Error('zzz')));
+});
+
+test('jeton de suivi gardé sur l\'appareil pour le retour de paiement', () => {
+  TT.rememberTrack('abc123'); assert.equal(TT.recallTrack(), 'abc123');
 });

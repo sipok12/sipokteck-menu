@@ -3,6 +3,8 @@ import { $, esc, money, safeUrl, digits, debounce } from '../core/utils.js';
 import { t, getLang, setLang, pick, applyI18n, initLangToggle } from '../core/i18n.js';
 import { friendlyError } from '../core/errors.js';
 import { getPublicRestaurant } from '../services/restaurant.service.js';
+import { startOrderPayment } from '../services/payments.service.js';
+import { rememberTrack } from '../core/track-token.js';
 
 const slug = new URLSearchParams(location.search).get('slug');
 const CUSTOMER_KEY = 'sipokmenu.customer';
@@ -42,6 +44,7 @@ function renderHeader() {
   const wa = digits(r.whatsapp);
   if (wa) links.push(`<a href="https://wa.me/${esc(wa)}" target="_blank" rel="noopener">💬 WhatsApp</a>`);
   $('contactLinks').innerHTML = links.join('');
+  $('payChoice').classList.toggle('hidden', !r.online_payments);
 }
 
 function renderCategories() {
@@ -118,6 +121,7 @@ async function checkout(event) {
   if (type === 'delivery' && address.length < 5) return void (msg.textContent = t('err.deliveryAddress'));
   if (!cart.size) return;
   const channel = document.querySelector('input[name="channel"]:checked').value;
+  const payOnline = restaurant.online_payments && document.querySelector('input[name="payWith"]:checked')?.value === 'online';
   const items = [...cart].map(([product_id, quantity]) => ({ product_id, quantity }));
   const snapshot = products.filter(p => cart.has(p.id)).map(p => ({ qty: cart.get(p.id), name: pick(p, 'name') }));
   const button = $('checkoutBtn');
@@ -133,7 +137,14 @@ async function checkout(event) {
     try { localStorage.setItem(CUSTOMER_KEY, JSON.stringify({ name, phone })); } catch { /* ignoré */ }
     msg.textContent = '';
     cart.clear(); saveCart(); renderProducts();
+    let payError = '';
+    if (data.tracking_token) rememberTrack(data.tracking_token);
+    if (payOnline && data.tracking_token) {
+      try { const { url } = await startOrderPayment(data.tracking_token); location.assign(url); return; } // paiement hébergé par FedaPay
+      catch (error) { payError = friendlyError(error); } // la commande existe : le client peut réessayer depuis son suivi
+    }
     showConfirmation(data, channel === 'whatsapp' ? buildWhatsAppLink(data, snapshot, { name, phone }) : '', channel === 'whatsapp');
+    if (payError) $('confirmation').insertAdjacentHTML('afterbegin', `<p class="notice" role="alert">${esc(t('menu.payFailed'))} ${esc(payError)}</p>`);
     $('cartCount').textContent = '0'; $('cartBar').classList.add('hidden');
   } catch (error) {
     msg.textContent = friendlyError(error);

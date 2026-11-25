@@ -1,4 +1,5 @@
 import { sb } from '../core/supabase.js';
+import { callFunction } from './functions.js';
 import { uploadPrivate } from './storage.service.js';
 
 export async function listPlans() {
@@ -34,17 +35,7 @@ export async function getStats(restaurantId, days) {
   return data;
 }
 
-/** Appelle l'Edge Function « fedapay » ; le montant n'est jamais envoyé, il est relu côté serveur. */
-async function callFedapay(body) {
-  const { data, error } = await sb.functions.invoke('fedapay', { body });
-  if (error) {
-    const detail = await error.context?.json?.().catch(() => null);
-    const err = new Error(detail?.error || error.message);
-    err.code = detail?.code;
-    throw err;
-  }
-  return data;
-}
+const callFedapay = body => callFunction('fedapay', body); // le montant n'est jamais envoyé : il est relu côté serveur
 /** Retourne l'URL de paiement FedaPay vers laquelle rediriger le restaurateur. */
 export const startOnlinePayment = (restaurantId, planCode) => callFedapay({ action: 'checkout', restaurant_id: restaurantId, plan_code: planCode });
 /** Redemande au serveur de relire l'état de la transaction chez FedaPay (retour de paiement). */

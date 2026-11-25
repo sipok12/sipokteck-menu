@@ -3,6 +3,7 @@ import { t } from '../core/i18n.js';
 import { friendlyError } from '../core/errors.js';
 import { sb } from '../core/supabase.js';
 import { updateRestaurant } from '../services/restaurant.service.js';
+import { getPaymentSettings, savePaymentSettings, disablePaymentSettings } from '../services/payments.service.js';
 import { uploadPublicImage } from '../services/storage.service.js';
 
 export function mountSettings(ctx, el) {
@@ -24,6 +25,8 @@ export function mountSettings(ctx, el) {
     <form id="pwForm" class="form-grid" novalidate><label class="field">${esc(t('set.newPassword'))}<input id="pw1" type="password" minlength="8" autocomplete="new-password"></label>
     <label class="field">${esc(t('reset.confirm'))}<input id="pw2" type="password" minlength="8" autocomplete="new-password"></label>
     <div class="full"><button class="btn secondary" type="submit">${esc(t('set.changePassword'))}</button> <span id="pwMsg" class="notice" role="alert"></span></div></form></section>`;
+
+  mountPaymentSettings(ctx, el);
 
   for (const [input, preview] of [['sLogo', 'sLogoPrev'], ['sCover', 'sCoverPrev']]) {
     $(input, el).addEventListener('change', () => {
@@ -62,6 +65,58 @@ export function mountSettings(ctx, el) {
       const { error } = await sb.auth.updateUser({ password: a });
       if (error) msg.textContent = friendlyError(error);
       else { msg.textContent = ''; e.target.reset(); toast(t('set.passwordChanged'), 'success'); }
+    });
+  });
+}
+
+const WEBHOOK_BASE = `${(window.SIPOKMENU_CONFIG?.supabaseUrl || '').replace(/\/$/, '')}/functions/v1/fedapay-orders`;
+
+// Section réservée au propriétaire : la clé est envoyée une seule fois, chiffrée côté serveur, puis jamais renvoyée.
+function mountPaymentSettings(ctx, el) {
+  const r = ctx.restaurant, hook = `${WEBHOOK_BASE}?r=${r.id}`;
+  const section = document.createElement('section');
+  section.className = 'panel';
+  section.innerHTML = `<h2>${esc(t('set.pay.title'))}</h2><p class="muted">${esc(t('set.pay.intro'))}</p>
+    <p id="payState" class="pill grey"></p>
+    <form id="payForm" class="form-grid" novalidate>
+    <label class="field">${esc(t('set.pay.env'))}<select id="payEnv"><option value="sandbox">${esc(t('set.pay.sandbox'))}</option><option value="live">${esc(t('set.pay.live'))}</option></select></label>
+    <label class="field">${esc(t('set.pay.key'))}<input id="payKey" type="password" autocomplete="off" spellcheck="false" maxlength="200"><small>${esc(t('set.pay.keyHint'))}</small></label>
+    <label class="field">${esc(t('set.pay.webhook'))}<input id="payHook" type="password" autocomplete="off" spellcheck="false" maxlength="200"></label>
+    <label class="field full">${esc(t('set.pay.url'))}<input id="payUrl" readonly value="${esc(hook)}"><small>${esc(t('set.pay.events'))}</small></label>
+    <div class="full"><button class="btn lg" type="submit">${esc(t('set.pay.save'))}</button>
+      <button class="btn secondary" type="button" id="payCopy">${esc(t('set.pay.copy'))}</button>
+      <button class="btn danger hidden" type="button" id="payOff">${esc(t('set.pay.disable'))}</button> <span id="payMsg" class="notice" role="alert"></span></div></form>`;
+  el.querySelector('#setForm').closest('section').after(section);
+
+  const q = id => section.querySelector(`#${id}`);
+  const show = s => {
+    q('payState').textContent = s?.enabled ? t('set.pay.on', { env: s.env, hint: s.key_hint || '' }) : t('set.pay.off');
+    q('payState').className = `pill ${s?.enabled ? 'ok' : 'grey'}`;
+    q('payOff').classList.toggle('hidden', !s?.enabled);
+    if (s?.env) q('payEnv').value = s.env;
+  };
+  getPaymentSettings(r.id).then(show).catch(() => show(null));
+
+  q('payCopy').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(hook); toast(t('set.pay.copied'), 'success'); } catch { q('payUrl').select(); }
+  });
+  q('payForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = q('payMsg'); msg.textContent = '';
+    const secretKey = q('payKey').value.trim();
+    if (!secretKey) return void (msg.textContent = t('set.pay.keyMissing'));
+    await withBusy(e.submitter, async () => {
+      try {
+        show(await savePaymentSettings(r.id, { env: q('payEnv').value, secretKey, webhookSecret: q('payHook').value.trim() }));
+        q('payKey').value = ''; q('payHook').value = ''; r.online_payments = true;
+        toast(t('set.pay.saved'), 'success');
+      } catch (error) { msg.textContent = friendlyError(error); }
+    });
+  });
+  q('payOff').addEventListener('click', async e => {
+    await withBusy(e.currentTarget, async () => {
+      try { show(await disablePaymentSettings(r.id)); r.online_payments = false; toast(t('set.pay.disabled'), 'success'); }
+      catch (error) { q('payMsg').textContent = friendlyError(error); }
     });
   });
 }

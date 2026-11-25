@@ -1,10 +1,14 @@
-import { $, esc, money, waLink } from '../core/utils.js';
+import { $, esc, money, waLink, toast } from '../core/utils.js';
 import { t, getLang, applyI18n, initLangToggle } from '../core/i18n.js';
 import { friendlyError } from '../core/errors.js';
+import { verifyOrderPayment, startOrderPayment } from '../services/payments.service.js';
+import { recallTrack } from '../core/track-token.js';
 import { trackOrder, customerMessages, customerSend, subscribeChat } from '../services/messages.service.js';
 
 // Le jeton est dans le fragment (#...) : il n'est jamais envoyé au serveur dans l'URL ni dans les en-têtes Referer.
-const token = (location.hash.slice(1) || new URLSearchParams(location.search).get('t') || '').trim().toLowerCase();
+const query = new URLSearchParams(location.search);
+// Au retour du paiement FedaPay, le fragment est perdu : on reprend le jeton gardé sur cet appareil.
+const token = (location.hash.slice(1) || query.get('t') || (query.get('paid') ? recallTrack() : '')).trim().toLowerCase();
 const STEPS = ['pending', 'confirmed', 'preparing', 'ready', 'completed'];
 let data = null, messages = [], stop = null, lastCount = -1;
 
@@ -26,6 +30,9 @@ function renderOrder() {
   $('trTotal').textContent = `${t('trk.total')} : ${money(o.total_xof, lang)}`;
   const wa = waLink(data.restaurant.whatsapp || data.restaurant.phone, t('trk.wa', { n: o.number }));
   $('trWa').innerHTML = wa ? `<a class="btn wa" href="${esc(wa)}" target="_blank" rel="noopener">💬 ${esc(t('trk.whatsapp'))}</a>` : '';
+  const paid = o.payment_status === 'paid';
+  $('trPay').innerHTML = `<span class="pill ${paid ? 'ok' : 'warn'}">${esc(t(`pay.${o.payment_status || 'unpaid'}`))}</span>`
+    + (data.can_pay_online ? ` <button type="button" class="btn" id="payNow">${esc(t('trk.payNow'))}</button> <small class="muted">${esc(t('trk.payHint'))}</small>` : '');
   $('chatForm').classList.toggle('hidden', !data.can_message);
   $('chatClosed').classList.toggle('hidden', data.can_message);
 }
@@ -48,6 +55,24 @@ async function refresh({ order = true } = {}) {
   }
 }
 
+async function pay(button) {
+  button.disabled = true;
+  try { const { url } = await startOrderPayment(token); location.assign(url); }
+  catch (error) { toast(friendlyError(error), 'error'); button.disabled = false; }
+}
+
+// Retour de FedaPay : le serveur relit l'état auprès de FedaPay (on ne fait pas confiance à l'URL).
+async function checkReturn() {
+  if (!query.get('paid')) return;
+  toast(t('trk.payChecking'));
+  try {
+    const r = await verifyOrderPayment(token);
+    await refresh({ order: true });
+    toast(t(r.status === 'approved' || data?.order.payment_status === 'paid' ? 'trk.payOk' : r.status === 'pending' ? 'trk.payWait' : 'trk.payFail'), data?.order.payment_status === 'paid' ? 'success' : undefined);
+  } catch (error) { toast(friendlyError(error), 'error'); }
+  history.replaceState(null, '', `/suivi#${token}`);
+}
+
 async function send(event) {
   event.preventDefault();
   const area = $('chatText'), msg = $('chatMsg'), content = area.value.trim();
@@ -66,6 +91,8 @@ async function init() {
   if (!data) return;
   $('loading').classList.add('hidden'); $('track').classList.remove('hidden'); applyI18n();
   $('chatForm').addEventListener('submit', send);
+  $('trPay').addEventListener('click', e => { const b = e.target.closest('#payNow'); if (b) pay(b); });
+  checkReturn();
   $('chatText').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) $('chatForm').requestSubmit(); });
   // Temps réel : ping de diffusion (sans contenu) puis relecture sécurisée ; sondage de secours si la connexion tombe.
   stop = subscribeChat(data.channel, () => refresh(), status => { if (status === 'SUBSCRIBED') $('chatOffline').classList.add('hidden'); });

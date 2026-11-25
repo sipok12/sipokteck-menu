@@ -6,59 +6,22 @@
 // Rien n'est jamais accepté sur la seule foi du client ou du webhook : le statut et le montant
 // sont toujours relus auprès de l'API FedaPay avant d'activer quoi que ce soit.
 import { createClient } from "npm:@supabase/supabase-js@2.109.0";
+import { corsHeaders, fedapayRequest, unwrap, validSignature } from "../_shared/fedapay-lib.ts";
 
 const SITE = (Deno.env.get("SITE_URL") || "https://sipokmenu-nine.vercel.app").replace(/\/$/, "");
-const API = Deno.env.get("FEDAPAY_ENV") === "live" ? "https://api.fedapay.com/v1" : "https://sandbox-api.fedapay.com/v1";
+const ENV = Deno.env.get("FEDAPAY_ENV") === "live" ? "live" : "sandbox";
 const SECRET = Deno.env.get("FEDAPAY_SECRET_KEY") ?? "";
 const WEBHOOK_SECRET = Deno.env.get("FEDAPAY_WEBHOOK_SECRET") ?? "";
 const URL_ = Deno.env.get("SUPABASE_URL")!;
 const admin = createClient(URL_, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
 
-const cors = {
-  "Access-Control-Allow-Origin": SITE,
-  "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Vary": "Origin",
-};
+const cors = corsHeaders(SITE);
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
 
-async function fedapay(path: string, init: RequestInit = {}) {
-  const res = await fetch(`${API}${path}`, {
-    ...init,
-    headers: { Authorization: `Bearer ${SECRET}`, "Content-Type": "application/json", Accept: "application/json" },
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(`FedaPay ${res.status}: ${JSON.stringify(data).slice(0, 300)}`);
-  return data;
-}
-// FedaPay enveloppe les objets (« v1/transaction »).
-function unwrap(data: any) {
-  if (data && data.id !== undefined) return data;
-  const inner = data && Object.values(data).find((v: any) => v && typeof v === "object" && v.id !== undefined);
-  return (inner ?? data) as any;
-}
+const fedapay = (path: string, init: RequestInit = {}) => fedapayRequest(ENV, SECRET, path, init);
 const getTransaction = async (id: string | number) => unwrap(await fedapay(`/transactions/${encodeURIComponent(String(id))}`));
-
-async function hmacHex(key: string, message: string) {
-  const k = await crypto.subtle.importKey("raw", new TextEncoder().encode(key), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-  const sig = new Uint8Array(await crypto.subtle.sign("HMAC", k, new TextEncoder().encode(message)));
-  return [...sig].map(b => b.toString(16).padStart(2, "0")).join("");
-}
-function safeEqual(a: string, b: string) {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return diff === 0;
-}
-async function validSignature(raw: string, header: string) {
-  if (!WEBHOOK_SECRET) return false;
-  const parts = Object.fromEntries(header.split(",").map(p => p.trim().split("=").map(s => s.trim())) as [string, string][]);
-  const t = parts.t, s = parts.s;
-  if (!t || !s || !/^\d+$/.test(t)) return false;
-  if (Math.abs(Date.now() / 1000 - Number(t)) > 600) return false; // anti-rejeu : 10 minutes
-  return safeEqual(await hmacHex(WEBHOOK_SECRET, `${t}.${raw}`), s.toLowerCase());
-}
+const validSig = (raw: string, header: string) => validSignature(WEBHOOK_SECRET, raw, header);
 
 async function finalize(tx: any, paymentRef: string | null) {
   const { data, error } = await admin.rpc("finalize_online_payment", {
@@ -70,7 +33,7 @@ async function finalize(tx: any, paymentRef: string | null) {
 }
 
 async function handleWebhook(req: Request, raw: string) {
-  if (!(await validSignature(raw, req.headers.get("x-fedapay-signature") ?? ""))) return json({ error: "invalid signature" }, 400);
+  if (!(await validSig(raw, req.headers.get("x-fedapay-signature") ?? ""))) return json({ error: "invalid signature" }, 400);
   let event: any;
   try { event = JSON.parse(raw); } catch { return json({ error: "invalid payload" }, 400); }
   const name = String(event.name ?? event.type ?? "");
